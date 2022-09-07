@@ -1,9 +1,11 @@
 import PyPDF2
 import os
 
+from extract_relations import extract_date
+
 def textPreprocess(text):
 	'''
-	handles multiple problems with traslating from pdf to text
+	handles multiple problems with translating from pdf to text
 	involves many hard coding solutions
 	'''
 
@@ -61,6 +63,14 @@ def textPreprocess(text):
 	newText3 = [item.replace('\"', '') for item in newText3]
 	newText3 = [item.replace('\'', '') for item in newText3]
 	newText3 = [item.replace('™', '\'') for item in newText3] #moved this below to keep the apostrophe in Cote d'Ivoire which is nescessary for GPE entity recognition
+	# fter = ""
+	# for footer in newText3[0].split('\n'):
+	# 	footer.replace("LAGA, PALF, AALF, GALF, EAGLE Togo, SALF, AALF-B, EAGLE Uganda, ALARM  Cameroon, Congo, Gabon, Guinea, Togo, Senegal, Benin, Uganda, Madagascar", "")
+	# 	fter += footer + "\n"
+	# print(fter)
+	# print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+	# print(newText3[0])
+	# print(newText3[0].split('\n'))
 	return newText3
 
 # return list of pages text ["page 1 text", "page 2 text"]
@@ -71,11 +81,20 @@ def readPDF(fileName, fileExt):
         for pageNum in range(pdfReader.numPages):
             pageObj = pdfReader.getPage(pageNum)
             text = pageObj.extractText()
-            pageToken = '| {}'.format(pageNum+1)
+            pageToken = '| {}'.format(pageNum+1) 
             text = text.replace(pageToken, pageToken+'\n')
-            text = text.replace('\n-\n', '')                                # IDEA May want to preserve newlines/tabs for identifying new paragraphs
+            text = text.replace('\n-\n', '')   # IDEA May want to preserve newlines/tabs for identifying new paragraphs
             text = [item for item in text.split('\n') if item != '']
             text = textPreprocess(text)
+            text[0] = extractDate(fileName)
             pages.append(text)
     text = [" ".join(page) for page in pages]
     return text
+
+# return date (month year format) from file name
+def extractDate(fileName):
+	tail = fileName.split("briefing-")
+	date = tail[1].split("-public")[0]
+	date = date.replace("-", " ")
+	date = date.capitalize()
+	return date

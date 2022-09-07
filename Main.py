@@ -332,11 +332,13 @@ def iterate_files(database):
         doc = nlp.pipe(pdf_text)
         page1 = next(doc)
         # WARNING some months reports have incorrect dates at beginning of text, IDEA use filename to get date?
+        print(page1.ents)
         full_date = page1.ents[0] # NOTE assumes that first ent always month year format
         month_name = full_date[0].text
         month_num = datetime.datetime.strptime(month_name, '%B').month
         formatted_month_num = f"{month_num:02}"
         short_date = formatted_month_num + "/" + full_date[1].text
+
         summary = next(doc)
 
         #displacy.render(summary, style="dep", options={"compact":True})
