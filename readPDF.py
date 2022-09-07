@@ -63,14 +63,6 @@ def textPreprocess(text):
 	newText3 = [item.replace('\"', '') for item in newText3]
 	newText3 = [item.replace('\'', '') for item in newText3]
 	newText3 = [item.replace('™', '\'') for item in newText3] #moved this below to keep the apostrophe in Cote d'Ivoire which is nescessary for GPE entity recognition
-	# fter = ""
-	# for footer in newText3[0].split('\n'):
-	# 	footer.replace("LAGA, PALF, AALF, GALF, EAGLE Togo, SALF, AALF-B, EAGLE Uganda, ALARM  Cameroon, Congo, Gabon, Guinea, Togo, Senegal, Benin, Uganda, Madagascar", "")
-	# 	fter += footer + "\n"
-	# print(fter)
-	# print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-	# print(newText3[0])
-	# print(newText3[0].split('\n'))
 	return newText3
 
 # return list of pages text ["page 1 text", "page 2 text"]
