@@ -19,7 +19,7 @@ def extract_product(ent, products, pid, eid):
         if tok._.is_animal:
             print(tok.text)
             if product.get("animal") is None:
-                product.update({"animal": check_plural(tok.text, "animals.txt")})
+                product.update({"animal": check_plural(tok.text, "model_token_matching/animals.txt")})
         elif tok.is_digit:
             product.update({"quantity": tok.text})
     if product not in products:

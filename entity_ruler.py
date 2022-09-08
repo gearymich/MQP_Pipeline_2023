@@ -27,10 +27,10 @@ def create_patterns(label, file):
 def add_entity_ruler_patterns(ruler):
     dirname = os.path.dirname("__file__")
 
-    filename = os.path.join(dirname, "animals.txt")
+    filename = os.path.join(dirname, "model_token_matching/animals.txt")
     animal_patterns = create_patterns("ANIMAL", filename)
     ruler.add_patterns(animal_patterns)
 
-    filename = os.path.join(dirname, "animal_products.txt")
+    filename = os.path.join(dirname, "model_token_matching/animal_products.txt")
     animal_product_patterns = create_patterns("PRODUCT", filename)
     ruler.add_patterns(animal_product_patterns)

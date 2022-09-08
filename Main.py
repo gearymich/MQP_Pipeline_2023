@@ -74,7 +74,7 @@ def fill_countries(dirname):
     with db.create_connection(database) as connection:
         # add list of countries to database
         countries = []
-        with open("countries.txt", "r") as f:
+        with open("model_token_matching/countries.txt", "r") as f:
             for line in f:
                 country = Country(line.strip())
                 countries.append(country)
@@ -106,7 +106,12 @@ def main():
                     LEFT JOIN Products
                     ON Events.id = Products.event_id;""" #WHERE Products.animal IS NOT NULL AND Locations.country IS NOT NULL;
         join = pd.read_sql_query(query, connection)
-        join.to_csv("data.csv")
+        
+        output_filename = \
+        "model_output/" + \
+            str(datetime.datetime.now().date()).replace("-", "_") + "_data.csv"
+
+        join.to_csv(output_filename)
         #print(join.to_string())
 
     print("Disconnected")

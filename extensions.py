@@ -11,7 +11,7 @@ def create_extensions():
         return p_list
 
     # Add token extension for animals
-    filename = os.path.join(dirname, "animals.txt")
+    filename = os.path.join(dirname, "model_token_matching/animals.txt")
     animal_extension = get_entity_list(filename)
     animal_extension = add_plurals(get_entity_list(filename), animal_extension)
 
@@ -19,7 +19,7 @@ def create_extensions():
     Token.set_extension("is_animal", getter=animal_getter, force=True)
 
     # Add token extension for units of weight
-    filename = os.path.join(dirname, "weight_units.txt")
+    filename = os.path.join(dirname, "model_token_matching/weight_units.txt")
     weight_extension = get_entity_list(filename)
     weight_extension = add_plurals(get_entity_list(filename), weight_extension)
 
