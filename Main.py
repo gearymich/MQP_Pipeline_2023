@@ -80,37 +80,6 @@ def fill_countries(dirname):
                 countries.append(country)
         db.add_rows(connection, countries, f"INSERT INTO Countries VALUES (?)")
 
-def main():
-    # Get pdf file text
-    dirname = os.path.dirname("__file__")
-
-    # create database
-    if not os.path.isfile("mqp_database.db"):
-        db.create_database()
-        # fill countries table in database from file of country names
-        fill_countries(dirname)
-
-    database = os.path.join(dirname, "mqp_database.db")
-
-    iterate_files(database)
-
-    # print out database tables
-    #print_tables(database)
-
-    with db.create_connection(database) as connection:
-        cursor = connection.cursor()
-
-        query = r"""SELECT * FROM Events
-                    LEFT JOIN Locations
-                    ON Events.location_id = Locations.id
-                    LEFT JOIN Products
-                    ON Events.id = Products.event_id;""" #WHERE Products.animal IS NOT NULL AND Locations.country IS NOT NULL;
-        join = pd.read_sql_query(query, connection)
-        join.to_csv("data.csv")
-        #print(join.to_string())
-
-    print("Disconnected")
-
 # helper to get singular noun form of a word if it is plural
 def get_singular(word):
     inflection = inflect.engine()
@@ -370,6 +339,37 @@ def iterate_files(database):
         db.add_rows(connection, products, f"INSERT INTO Products VALUES (?,?,?,?,?,?,?,?,?)")
 
         print("Rows added")
+
+def main():
+    # Get pdf file text
+    dirname = os.path.dirname("__file__")
+
+    # create database
+    if not os.path.isfile("mqp_database.db"):
+        db.create_database()
+        # fill countries table in database from file of country names
+        fill_countries(dirname)
+
+    database = os.path.join(dirname, "mqp_database.db")
+
+    iterate_files(database)
+
+    # print out database tables
+    #print_tables(database)
+
+    with db.create_connection(database) as connection:
+        cursor = connection.cursor()
+
+        query = r"""SELECT * FROM Events
+                    LEFT JOIN Locations
+                    ON Events.location_id = Locations.id
+                    LEFT JOIN Products
+                    ON Events.id = Products.event_id;""" #WHERE Products.animal IS NOT NULL AND Locations.country IS NOT NULL;
+        join = pd.read_sql_query(query, connection)
+        join.to_csv("data.csv")
+        #print(join.to_string())
+
+    print("Disconnected")
 
 
 if __name__=="__main__":
