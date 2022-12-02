@@ -1,9 +1,0 @@
-bone
-claw
-fur
-ivory
-meat
-scale
-skin
-teeth
-tusk

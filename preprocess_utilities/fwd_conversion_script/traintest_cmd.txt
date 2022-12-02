@@ -1,0 +1,8 @@
+spacy_to_binary output:
+TOTAL DOCS LOADED: 315
+FAILED DOC LOADS: 16
+
+80/20 split
+
+head -n 255 spacy_trafficker_id_srsly.jsonl > train.jsonl
+tail -n 60 spacy_trafficker_id_srsly.jsonl > test.jsonl

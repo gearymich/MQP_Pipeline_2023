@@ -1,0 +1,20 @@
+TODO: Convert into docker
+PACKAGES NEEDED TO INSTALL (pip install ###)
+
+newspaper:
+    newspaper
+
+ner_model:
+    spacy
+    displacy
+
+preprocess_utilities:
+    spacy
+    srsly
+    typer
+    rich
+
+spacy_streamlit_prototype:
+    spacy
+    streamlit
+    spacy_streamlit
