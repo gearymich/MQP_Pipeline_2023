@@ -131,3 +131,6 @@ dmypy.json
 .pdf
 
 .idea/
+
+# ignore spacy binaries
+*.spacy
