@@ -42,7 +42,7 @@ EVENT_LABELS=['newsSource', 'publishDate']
 PRODUCT_LABELS=['productName', 'species']
 TRAFFICKER_LABELS=['traffickerName', 'traffickerBirthYear', 'traffickerOrigin']
 
-ALL_LABELS = EVENTPRODUCT_LABELS + EVENTTRAFFICKER_LABELS + EVENT_LABELS + PRODUCT_LABELS + TRAFFICKER_LABELS
+ALL_LABELS = EVENTPRODUCT_LABELS + EVENTTRAFFICKER_LABELS + EVENT_LABELS + PRODUCT_LABELS + TRAFFICKER_LABELS + ['seizureLocation', ]
 
 DOCCANO_INPUT_JSONL = './source_data/all_final.jsonl'
 
@@ -65,7 +65,6 @@ def filterLabels(
             raise typer.Exit()
 
     final_jsonl = []
-    
     for textLabels in srsly.read_jsonl(DOCCANO_INPUT_JSONL):
         relationList = textLabels.pop('relations')
         entList = textLabels.pop('entities')
@@ -161,6 +160,10 @@ def main(
         os.makedirs("./binary_data/" + filename)
 
     filter_jsonl = filterLabels(label_list, relations=relations, withID=withID)
+    # save filtered jsonl to disk
+    print("Saving filtered jsonl to disk")
+    srsly.write_jsonl(f"./binary_data/{filename}/{filename}.jsonl", filter_jsonl)
+    exit()
     train_jsonl, test_jsonl, val_jsonl = train_test_val_split(filter_jsonl)
 
     db_train, faultyDocs = genBinaries(train_jsonl)
