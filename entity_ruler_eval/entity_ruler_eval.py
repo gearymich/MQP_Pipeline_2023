@@ -16,6 +16,8 @@ import logging
 Precision, Recall, And F1-Scores calculated from spacy.scorer Scorer Class.
 Ground truth is imported from doccano labeled data via .jsonl files 
 (filtered based on what type of NER is being tested). 
+
+e
 '''
 
 # TODO:
@@ -30,6 +32,8 @@ TOTAL_TE_LOADED = 30
 
 DOCCANO_JSONL_SPACY_DEFAULT_PATH = './source_data/spacy_default_data.jsonl'
 DOCCANO_JSONL_SPACY_RULER_PATH = './source_data/spacy_default_and_ruler_data.jsonl'
+
+DOCCANO_JSONL_SPACY_FULL_PATH = './source_data/spacy_annotations_full_dataset.jsonl'
 
 RULER_PATTERNS_PATH = "./pattern_data/ruler_patterns.jsonl"
 
@@ -58,20 +62,19 @@ LABEL_CONV_DICT = {
     "productName": "productName"
 }
 
-'''
-Load a .jsonl file into a list of dictionaries
-'''
 def load_data(filepath: str) -> List[Dict]:
+    '''Load a .jsonl file into a list of dictionaries'''
     jsonl = list(srsly.read_jsonl(filepath))
     # random.shuffle(jsonl)
     return jsonl
 
-'''
-Split a list of dictionaries (.jsonl format) into train and test sets.
-(No validation set is used in this script)
-(train and test if-else flipped from other script)
-'''
+
 def train_test_val_split(jsonl):
+    '''
+    Split a list of dictionaries (.jsonl format) into train and test sets.
+    (No validation set is used in this script)
+    (train and test if-else flipped from other script)
+    '''
     train_jsonl = []
     test_jsonl = []
     for i, textLabels in enumerate(jsonl):
@@ -107,10 +110,11 @@ def bootstrap_test_jsonl(test_jsonl, num_samples=TOTAL_TE_LOADED):
 #     return bootstrapped_jsonl
 
 
-'''
-Uses both Default SpaCy NER and 2022 Ruler
-'''
+
 def example_builder(nlp, ner_pipe, text_labels):
+    '''
+    Uses both Default SpaCy NER and 2022 Ruler
+    '''
     actual_entities = [(ent['start'], ent['end'], ent['label']) for ent in text_labels['entities']]
     actual_dict = {'text': text_labels['text'], 'entities': actual_entities}
     pred_doc = nlp(text_labels['text'])
@@ -130,14 +134,14 @@ def main(
     
     if ruler:
         print("Measuring Default SpaCy NER w/ 2022 Entity Ruler")
-        filepath = DOCCANO_JSONL_SPACY_RULER_PATH
+        filepath = DOCCANO_JSONL_SPACY_FULL_PATH
         ruler_pipe = nlp.add_pipe("entity_ruler").from_disk(RULER_PATTERNS_PATH)
         ner_pipe = nlp.add_pipe("ner", source=source_nlp)
         example_builder_wrapper = lambda text_labels: example_builder(nlp, ner_pipe, text_labels)
 
     else:
         print("Measuring Default SpaCy NER Model ONLY")
-        filepath = DOCCANO_JSONL_SPACY_DEFAULT_PATH
+        filepath = DOCCANO_JSONL_SPACY_FULL_PATH
         ner_pipe = nlp.add_pipe("ner", source=source_nlp)
         example_builder_wrapper = lambda text_labels: example_builder(nlp, ner_pipe, text_labels)
 
@@ -193,6 +197,7 @@ def main(
     ub_r = (inorder_r[97] + inorder_r[98])/2
 
     logging.info("95% Confidence Interval Recall: LOWER - {0}, UPPER - {1}".format(lb_r, ub_r))
+    
     inorder_f = sorted(ents_f_all)
     lb_f = (inorder_f[1] + inorder_f[2])/2
     ub_f = (inorder_f[97] + inorder_f[98])/2

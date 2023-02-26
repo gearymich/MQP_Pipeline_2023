@@ -11,8 +11,7 @@ from rich import print
 
 '''
 Python Script to convert a raw doccano output for custom spacy model training
-
-TODO: Define naming convention of files generated
+to a binary format that can be used to train a spacy model.
 
 ALL_LABELS: labels that this script will expect to convert (all labels described in our db scheme)
 DOCCANO_INPUT_JSONL = name of the file (a Spacy output) that this script reads from. Should not be changing. (.jsonl format)
@@ -31,11 +30,6 @@ tags:
     --bootstrap Bootstrap the test set. Default: False
 '''
 
-# ALL_LABELS=['newsSource', 'publishDate', 'numOfArrests', 'arrestLocation', \
-#             'seizureLocation', 'transportMethod', 'traffickerName', \
-#             'traffickerBirthYear', 'quantity', 'quantityUnit', \
-#             'destinationLocation', 'obfuscationMethod', 'traffickerOrigin']
-
 EVENTPRODUCT_LABELS=['quantity', 'quantityUnit', 'price', 'priceUnit']
 EVENTTRAFFICKER_LABELS=[]
 EVENT_LABELS=['newsSource', 'publishDate']
@@ -43,6 +37,7 @@ PRODUCT_LABELS=['productName', 'species']
 TRAFFICKER_LABELS=['traffickerName', 'traffickerBirthYear', 'traffickerOrigin']
 
 ALL_LABELS = EVENTPRODUCT_LABELS + EVENTTRAFFICKER_LABELS + EVENT_LABELS + PRODUCT_LABELS + TRAFFICKER_LABELS + ['seizureLocation', ]
+REDUCED_LABELS = ['publishDate', 'seizureLocation', 'traffickerName', 'traffickerBirthYear', 'species', 'productName' ]
 
 DOCCANO_INPUT_JSONL = './source_data/all_final.jsonl'
 
@@ -52,12 +47,12 @@ TOTAL_TR_LOADED = 240
 TOTAL_TE_LOADED = 30
 TOTAL_VAL_LOADED = 30
 
-'''Filter the labels from the doccano output. Returns a list of dictionaries (.jsonl format)'''
 def filterLabels(
     label_list: List[str], 
     relations=False, 
     withID=False
 ): 
+    '''Filter the labels from the doccano output. Returns a list of dictionaries (.jsonl format)'''
     for label in label_list:
         if label not in ALL_LABELS: #TODO: Switch to ALL_LABELS when annotation work is finished
             print(f"the given label {label} does not exist within our Doccano annotation")
@@ -112,8 +107,8 @@ def train_test_val_split(jsonl):
     
     return train_jsonl, test_jsonl, val_jsonl
 
-'''Converts a list of dictionaries (.jsonl format) to a spacy DocBin object'''
 def genBinaries(jsonl):
+    '''Converts a list of dictionaries (.jsonl format) to a spacy DocBin object'''
     nlp = spacy.blank("en")
     db_train = DocBin()
 
@@ -140,8 +135,8 @@ def genBinaries(jsonl):
     
     return db_train, faultyDocs
 
-'''bootstrap the test set'''
 def bootstrap_test_jsonl(test_jsonl, num_samples=TOTAL_TE_LOADED):
+    '''bootstrap the test set'''
     bootstrapped_jsonl = []
     for _ in range(num_samples):
         a_json = random.choice(test_jsonl)
@@ -150,7 +145,7 @@ def bootstrap_test_jsonl(test_jsonl, num_samples=TOTAL_TE_LOADED):
     return bootstrapped_jsonl
 
 def main(
-    label_list: List[str], 
+    # label_list: List[str], 
     relations: bool = typer.Option(False, "--relations/", help="Export relations to .spacy. Default: False"), 
     withID: bool = typer.Option(False, "--id/", help="Export the ids of each doccano text, entites, and relation to .spacy. Default: False"),
     filename: str = typer.Option("trafficker_data_TEST", "--filename", help="Name of the file exported. Defualt: spacy_annotations_filtered.jsonl"),
@@ -159,11 +154,13 @@ def main(
     if not os.path.exists("./binary_data/" + filename):
         os.makedirs("./binary_data/" + filename)
 
-    filter_jsonl = filterLabels(label_list, relations=relations, withID=withID)
-    # save filtered jsonl to disk
+    filter_jsonl = filterLabels(ALL_LABELS, relations=relations, withID=withID)
+    # # uncomment to save filtered jsonl to disk
     print("Saving filtered jsonl to disk")
     srsly.write_jsonl(f"./binary_data/{filename}/{filename}.jsonl", filter_jsonl)
     exit()
+
+    # else
     train_jsonl, test_jsonl, val_jsonl = train_test_val_split(filter_jsonl)
 
     db_train, faultyDocs = genBinaries(train_jsonl)
