@@ -22,6 +22,8 @@ Product: python .\doccano_to_binary.py productName species --filename spacy_anno
 Event: python .\doccano_to_binary.py newsSource publishDate --filename spacy_annotations_event
 EventProduct: python .\doccano_to_binary.py quantity quantityUnit price priceUnit --filename spacy_annotations_eventproduct
 
+Reduced: python .\doccano_to_binary.py productName traffickerName seizureLocation publishDate traffickerBirthYear --filename spacy_reduced_dataset
+
 tags:
     --relations Export relations to .spacy. Default: False 
     --id "Export the ids of each doccano text, entites, and relation to .spacy. Default: False
@@ -154,7 +156,7 @@ def main(
     if not os.path.exists("./binary_data/" + filename):
         os.makedirs("./binary_data/" + filename)
 
-    filter_jsonl = filterLabels(ALL_LABELS, relations=relations, withID=withID)
+    filter_jsonl = filterLabels(['productName', 'traffickerName', 'seizureLocation', 'publishDate', 'traffickerBirthYear'], relations=relations, withID=withID)
     # # uncomment to save filtered jsonl to disk
     print("Saving filtered jsonl to disk")
     srsly.write_jsonl(f"./binary_data/{filename}/{filename}.jsonl", filter_jsonl)

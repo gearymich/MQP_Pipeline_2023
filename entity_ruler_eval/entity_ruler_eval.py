@@ -16,26 +16,17 @@ import logging
 Precision, Recall, And F1-Scores calculated from spacy.scorer Scorer Class.
 Ground truth is imported from doccano labeled data via .jsonl files 
 (filtered based on what type of NER is being tested). 
-
-e
 '''
-
-# TODO:
-# 1. REMOVE RULER ONLY MODEL
-# 2. FIX CODE TO BE CLEAN
-# 3. CLARIFY TEST SPLIT (use same 30 docs that were used for new models)
-# 4. IMPLEMENT BOOTSTRAP TESTING
-# 5. COLLECT ALL METRICS DONE FROM PREVIOUS MODEL
 
 TOTAL_TR_LOADED = 300
 TOTAL_TE_LOADED = 30
 
-DOCCANO_JSONL_SPACY_DEFAULT_PATH = './source_data/spacy_default_data.jsonl'
-DOCCANO_JSONL_SPACY_RULER_PATH = './source_data/spacy_default_and_ruler_data.jsonl'
-
-DOCCANO_JSONL_SPACY_FULL_PATH = './source_data/spacy_annotations_full_dataset.jsonl'
+DCNO_FULL_FINAL_PATH = './source_data/spacy_full_dataset.jsonl'
+DCNO_REDUCED_FINAL_PATH = './source_data/spacy_reduced_dataset.jsonl'
 
 RULER_PATTERNS_PATH = "./pattern_data/ruler_patterns.jsonl"
+
+LOG_FILENAME = "bootstrap_test_2022_ruler"
 
 LABEL_CONV_DICT = {
     "PRODUCT": "productName",
@@ -43,7 +34,6 @@ LABEL_CONV_DICT = {
     "GPE": "seizureLocation",
     "DATE": "publishDate",
     "CARDINAL": "traffickerBirthYear",
-    # convert all other labels to a UNK label
     "MONEY": "UNK",
     "QUANTITY": "UNK",
     "ORG": "UNK",
@@ -57,7 +47,6 @@ LABEL_CONV_DICT = {
     "FAC": "UNK",
     "WORK_OF_ART": "UNK",
     "EVENT": "UNK",
-    # ruler labels: do not convert
     "species": "species",
     "productName": "productName"
 }
@@ -65,7 +54,6 @@ LABEL_CONV_DICT = {
 def load_data(filepath: str) -> List[Dict]:
     '''Load a .jsonl file into a list of dictionaries'''
     jsonl = list(srsly.read_jsonl(filepath))
-    # random.shuffle(jsonl)
     return jsonl
 
 
@@ -85,13 +73,11 @@ def train_test_val_split(jsonl):
     
     return train_jsonl, test_jsonl
 
-'''bootstrap the test set'''
 def bootstrap_test_jsonl(test_jsonl, num_samples=TOTAL_TE_LOADED):
+    '''bootstrap the test set'''
     all_bootstrapped_jsonl = []
-
     for _ in range(100):
         bootstrapped_jsonl = []
-
         for _ in range(num_samples):
             a_json = random.choice(test_jsonl)
             bootstrapped_jsonl.append(a_json)
@@ -100,21 +86,9 @@ def bootstrap_test_jsonl(test_jsonl, num_samples=TOTAL_TE_LOADED):
 
     return all_bootstrapped_jsonl
 
-# def bootstrap_test_jsonl(test_jsonl, num_samples=TOTAL_TE_LOADED):
-#     bootstrapped_jsonl = []
-
-#     for _ in range(num_samples):
-#         a_json = random.choice(test_jsonl)
-#         bootstrapped_jsonl.append(a_json)
-
-#     return bootstrapped_jsonl
-
-
 
 def example_builder(nlp, ner_pipe, text_labels):
-    '''
-    Uses both Default SpaCy NER and 2022 Ruler
-    '''
+    '''Uses both Default SpaCy NER and 2022 Ruler'''
     actual_entities = [(ent['start'], ent['end'], ent['label']) for ent in text_labels['entities']]
     actual_dict = {'text': text_labels['text'], 'entities': actual_entities}
     pred_doc = nlp(text_labels['text'])
@@ -124,24 +98,25 @@ def example_builder(nlp, ner_pipe, text_labels):
     return Example.from_dict(pred_doc, actual_dict)
 
 def main(
-    ruler: bool = typer.Option(False, "--ruler/", help="Temp")
+    ruler: bool = typer.Option(False, "--ruler/", help="Temp"),
+    reduced_dataset: bool = typer.Option(False, "--reduced_dataset/", help="Temp"),
+    log_filename: str = typer.Option(LOG_FILENAME, "--log_filename/", help="Temp")
 ):
-    logging.basicConfig(level=logging.DEBUG, filename="./logging/bootstrap-ruler.txt", filemode="a+",
+    logging.basicConfig(level=logging.DEBUG, filename=f"./logging/{log_filename}.txt", filemode="a+",
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
 
     source_nlp = spacy.load("en_core_web_sm")
     nlp = spacy.blank("en")
+    filepath = DCNO_REDUCED_FINAL_PATH if reduced_dataset else DCNO_FULL_FINAL_PATH
     
     if ruler:
         print("Measuring Default SpaCy NER w/ 2022 Entity Ruler")
-        filepath = DOCCANO_JSONL_SPACY_FULL_PATH
         ruler_pipe = nlp.add_pipe("entity_ruler").from_disk(RULER_PATTERNS_PATH)
         ner_pipe = nlp.add_pipe("ner", source=source_nlp)
         example_builder_wrapper = lambda text_labels: example_builder(nlp, ner_pipe, text_labels)
 
     else:
         print("Measuring Default SpaCy NER Model ONLY")
-        filepath = DOCCANO_JSONL_SPACY_FULL_PATH
         ner_pipe = nlp.add_pipe("ner", source=source_nlp)
         example_builder_wrapper = lambda text_labels: example_builder(nlp, ner_pipe, text_labels)
 
@@ -168,7 +143,7 @@ def main(
                 failCount += 1
                 continue
 
-        logging.info("{0} Example with Errors: {1}".format(idx, failCount))
+        logging.info(f"Bootstrap Iteration #{idx}. Example with Errors: {failCount}")
         scorer = Scorer()
         scores = scorer.score(examples)
 
